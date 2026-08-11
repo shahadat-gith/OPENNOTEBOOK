@@ -128,6 +128,8 @@ export function WorkspaceProvider({ children }) {
 
   const [sources, setSources] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [sourcesReady, setSourcesReady] = useState(false);
+  const [messagesReady, setMessagesReady] = useState(false);
 
   const abortRef = useRef(null);
   const timerRef = useRef(null);
@@ -142,7 +144,10 @@ export function WorkspaceProvider({ children }) {
   const [loadErrorShown, setLoadErrorShown] = useState(false);
 
   const refreshSources = useCallback(async () => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setSourcesReady(true);
+      return;
+    }
     try {
       const { data } = await api.get("/sources", {
         params: { notebook_id: notebookId },
@@ -154,6 +159,8 @@ export function WorkspaceProvider({ children }) {
         setLoadErrorShown(true);
         toast.error(error.message || "Could not load sources.");
       }
+    } finally {
+      setSourcesReady(true);
     }
   }, [notebookId, loadErrorShown]);
 
@@ -171,7 +178,10 @@ export function WorkspaceProvider({ children }) {
   }, [sources, refreshSources]);
 
   const loadMessages = useCallback(async () => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setMessagesReady(true);
+      return;
+    }
     try {
       const { data } = await api.get("/ask", {
         params: { notebook_id: notebookId },
@@ -182,6 +192,8 @@ export function WorkspaceProvider({ children }) {
       if (error.response?.status !== 401) {
         toast.error(error.message || "Could not load chat history.");
       }
+    } finally {
+      setMessagesReady(true);
     }
   }, [notebookId]);
 
@@ -295,6 +307,8 @@ export function WorkspaceProvider({ children }) {
         notebookTitle,
         sources,
         messages,
+        sourcesLoading: !sourcesReady,
+        messagesLoading: !messagesReady,
         uploadSources,
         removeSource,
         sendMessage,

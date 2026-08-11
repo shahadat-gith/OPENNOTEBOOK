@@ -12,7 +12,7 @@ function isPdf(name) {
 }
 
 export function SourcePanel({ collapsed, onToggleCollapse }) {
-  const { sources, uploadSources } = useWorkspace()
+  const { sources, uploadSources, sourcesLoading } = useWorkspace()
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -101,7 +101,23 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
           handleFiles(e.dataTransfer.files)
         }}
       >
-        {sources.length > 0 ? (
+        {sourcesLoading ? (
+          <div className="min-h-0 flex-1 space-y-0.5 px-2 pt-3 pb-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-xl px-2 py-2"
+              >
+                <UI.Skeleton className="size-9 shrink-0 rounded-lg" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <UI.Skeleton className="h-3.5 w-3/4" />
+                  <UI.Skeleton className="h-3 w-1/2" />
+                </div>
+                <UI.Skeleton className="h-5 w-14 shrink-0 rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : sources.length > 0 ? (
           <UI.ScrollArea className="min-h-0 flex-1 px-2 pt-3 pb-2">
             <div className="grid gap-0.5">
               {sources.map((source) => (

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import { MdAdd, MdAutoAwesome, MdBook, MdChevronRight, MdLogout, MdSchedule } from "react-icons/md"
+import { MdAdd, MdBook, MdChevronRight, MdLogout, MdSchedule } from "react-icons/md"
 import { Home } from "@/components/home"
 import { Shared } from "@/components/shared"
 import { UI } from "@/components/ui"
@@ -25,9 +25,23 @@ function formatDate(iso) {
 
 function LoadingState() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#121417] text-[#9aa0a6]">
-      <MdAutoAwesome className="size-8 animate-pulse text-[#8ab4f8]" />
-      <p className="text-sm">Loading your notebooks…</p>
+    <div className="flex min-h-dvh flex-col bg-[#121417]">
+      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-[#121417]/80 px-4 sm:px-6">
+        <UI.Skeleton className="size-9 rounded-xl" />
+        <div className="ml-auto flex items-center gap-2">
+          <UI.Skeleton className="h-9 w-32 rounded-full" />
+          <UI.Skeleton className="h-9 w-24 rounded-full" />
+        </div>
+      </div>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+        <UI.Skeleton className="h-8 w-52" />
+        <UI.Skeleton className="mt-3 h-4 w-64" />
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <UI.Skeleton key={i} className="min-h-40 rounded-2xl" />
+          ))}
+        </div>
+      </main>
     </div>
   )
 }

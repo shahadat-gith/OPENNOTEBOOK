@@ -47,6 +47,7 @@ import { Input } from "./input"
 import { Label } from "./label"
 import { Progress } from "./progress"
 import { ScrollArea, ScrollBar } from "./scroll-area"
+import { Skeleton } from "./skeleton"
 import { Toaster } from "./sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
 import { Textarea } from "./textarea"
@@ -104,6 +105,7 @@ export const UI = {
   Progress,
   ScrollArea,
   ScrollBar,
+  Skeleton,
   Toaster,
   Tabs,
   TabsContent,
