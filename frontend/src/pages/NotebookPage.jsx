@@ -5,10 +5,11 @@ import { WorkspaceProvider } from "@/context/WorkspaceContext"
 
 export function NotebookPage() {
   const [searchParams] = useSearchParams()
+  const id = searchParams.get("id")?.trim() || ""
   const title = searchParams.get("title")?.trim() || ""
 
   return (
-    <WorkspaceProvider key={title}>
+    <WorkspaceProvider key={id || title}>
       <Notebook.Notebook />
     </WorkspaceProvider>
   )

@@ -1,1 +1,0 @@
-export { mockAnswers } from "./answers"

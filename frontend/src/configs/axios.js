@@ -1,6 +1,8 @@
 import axios from "axios"
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1"
+export const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1"
+
 const TOKEN_KEY = "auth_token"
 
 export function getToken() {
@@ -18,7 +20,10 @@ export function clearToken() {
 
 export const api = axios.create({
   baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
+  // NOTE: do NOT set a global Content-Type here. axios 1.19 converts
+  // FormData payloads to JSON when the request header is application/json,
+  // which breaks multipart uploads (POST /sources → 422). For plain object
+  // bodies axios sets application/json automatically.
 })
 
 // Attach the Bearer token to every request.

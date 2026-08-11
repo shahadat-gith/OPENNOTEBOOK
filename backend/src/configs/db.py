@@ -1,24 +1,20 @@
-"""MongoDB: async Motor client, database handle, and FastAPI dependency."""
 
-import logging
+
 import os
 from typing import Annotated
-from urllib.parse import urlsplit
 
+from dotenv import load_dotenv
 from fastapi import Depends
 from motor.motor_asyncio import (
     AsyncIOMotorClient,
     AsyncIOMotorDatabase,
 )
 
+load_dotenv()
 
-logger = logging.getLogger("opennotebook.db")
 
-
-MONGODB_URI = os.getenv("MONGODB_URI")
-
-if not MONGODB_URI:
-    raise RuntimeError("MONGODB_URI is not set")
+MONGODB_URI = os.environ["MONGODB_URI"]
+DB_NAME = os.environ["DB_NAME"]
 
 
 client: AsyncIOMotorClient = AsyncIOMotorClient(
@@ -26,26 +22,11 @@ client: AsyncIOMotorClient = AsyncIOMotorClient(
     serverSelectionTimeoutMS=5000,
 )
 
-
-DB_NAME = os.getenv("DB_NAME")
-
-if not DB_NAME:
-    raise RuntimeError("DB_NAME is not set")
-
-
 db: AsyncIOMotorDatabase = client[DB_NAME]
 
 
-def _uri_host(uri: str) -> str:
-    """Host part of the URI only — never log credentials."""
-    try:
-        return urlsplit(uri).hostname or uri
-    except ValueError:
-        return uri
-
-
 def get_db() -> AsyncIOMotorDatabase:
-    """FastAPI dependency — returns the shared MongoDB database handle."""
+    """FastAPI dependency — return the shared MongoDB database handle."""
     return db
 
 
@@ -56,6 +37,15 @@ Db = Annotated[
 
 
 async def init_db() -> None:
+    """Create MongoDB indexes during application startup.
+
+    Startup must not crash the app when MongoDB is temporarily unreachable
+    (e.g. Atlas network-access misconfiguration); indexes are re-attempted on
+    the next restart.
+    """
+
+    from urllib.parse import urlsplit
+
     from models import Message, Notebook, Source, User
 
     try:
@@ -78,17 +68,17 @@ async def init_db() -> None:
         await db[Message.Collection].create_index(
             "notebook_id",
         )
-        logger.info("MongoDB connected at %s — indexes ready", _uri_host(MONGODB_URI))
     except Exception as error:  # noqa: BLE001 — startup must not crash the app
-        logger.warning(
-            "MongoDB unreachable at %s (db=%s) — starting without indexes: %s. "
-            "If using Atlas, check Network Access allows this machine's IP.",
-            _uri_host(MONGODB_URI),
-            db.name,
-            error,
+        try:
+            host = urlsplit(MONGODB_URI).hostname or MONGODB_URI
+        except ValueError:
+            host = MONGODB_URI
+        print(
+            f"[opennotebook] MongoDB unreachable at {host} (db={db.name}) "
+            f"- starting without indexes: {error}"
         )
 
 
 async def close_db() -> None:
-    """Close the underlying MongoDB connection pool."""
+    """Close the MongoDB connection pool."""
     client.close()

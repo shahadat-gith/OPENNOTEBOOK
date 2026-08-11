@@ -4,9 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET")
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 
 s3 = boto3.client(
     "s3",
@@ -16,17 +15,3 @@ s3 = boto3.client(
 )
 
 
-def upload_to_s3(file, key, content_type=None):
-    extra_args = {}
-
-    if content_type:
-        extra_args["ContentType"] = content_type
-
-    s3.upload_fileobj(
-        file,
-        BUCKET_NAME,
-        key,
-        ExtraArgs=extra_args,
-    )
-
-    return key

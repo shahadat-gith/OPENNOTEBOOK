@@ -1,1 +1,5 @@
-"""AWS SQS: client, producers, and background consumers for the RAG pipeline."""
+from .producer import publish_source_processing
+
+__all__=[
+    "publish_source_processing"
+]

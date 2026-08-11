@@ -29,6 +29,11 @@ export function UploadedSourceItems({ source }) {
           {typeMeta.label}
           {source.pageCount > 0 && ` · ${source.pageCount} pages`}
         </p>
+        {source.status === "failed" && source.error && (
+          <p className="mt-0.5 truncate text-xs text-red-500/90" title={source.error}>
+            {source.error}
+          </p>
+        )}
       </div>
 
       <SourceStatusBadge status={source.status} />

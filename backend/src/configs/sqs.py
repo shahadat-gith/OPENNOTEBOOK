@@ -1,12 +1,15 @@
-import os
+
+
 import json
+import os
+
 import boto3
 from dotenv import load_dotenv
 
 load_dotenv()
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+QUEUE_URL = os.environ["AWS_SQS_QUEUE_URL"]
+
 
 sqs = boto3.client(
     "sqs",
@@ -15,4 +18,11 @@ sqs = boto3.client(
     region_name="ap-south-1",
 )
 
-QUEUE_URL = os.getenv("AWS_SQS_QUEUE_URL")
+
+def publish_message(message: dict) -> str:
+    response = sqs.send_message(
+        QueueUrl=QUEUE_URL,
+        MessageBody=json.dumps(message),
+    )
+
+    return response["MessageId"]

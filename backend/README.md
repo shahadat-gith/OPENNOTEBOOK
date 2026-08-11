@@ -66,6 +66,31 @@ anyway (DB requests fail until connectivity returns). If you use Atlas:
 4. Restart the server — a successful start logs
    `MongoDB connected … indexes ready`.
 
+## Source ingestion (SQS consumer)
+
+Uploads are queued asynchronously. The consumer runs **inside the app** — it is
+started automatically in `main.py`'s lifespan, so there is no separate process
+to run. Just start the API:
+
+```bash
+uv run uvicorn main:app --app-dir src --reload
+```
+
+The pipeline: download PDF from S3 → extract text page by page → chunk →
+embed (OpenRouter) → upsert into Qdrant → mark the source `ready`.
+
+### Required AWS IAM permissions
+
+The IAM user used by `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` must be
+allowed to act on the SQS queue in `AWS_SQS_QUEUE_URL`:
+
+- `sqs:SendMessage` — the API (producer) needs this to enqueue uploads.
+- `sqs:ReceiveMessage` + `sqs:DeleteMessage` — the consumer needs these.
+
+If `SendMessage` is missing, uploads still succeed (S3 + metadata) but the
+source is marked `failed` with the reason; if `ReceiveMessage`/`DeleteMessage`
+are missing, the consumer retries every 5s and prints the AccessDenied error.
+
 ## API
 
 | Method | Path                  | Auth   | Description              |
@@ -76,3 +101,6 @@ anyway (DB requests fail until connectivity returns). If you use Atlas:
 | GET    | `/api/v1/auth/me`     | Bearer | Current user             |
 | GET    | `/api/v1/notebooks`   | Bearer | List user's notebooks    |
 | POST   | `/api/v1/notebooks`   | Bearer | Create a notebook        |
+| GET    | `/api/v1/sources`     | Bearer | List a notebook's sources (`?notebook_id=`) |
+| POST   | `/api/v1/sources`     | Bearer | Upload a PDF (`multipart file` + `notebook_id`) |
+| DELETE | `/api/v1/sources/:id` | Bearer | Delete a source (S3 + Qdrant + metadata) |

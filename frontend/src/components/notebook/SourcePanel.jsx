@@ -11,39 +11,8 @@ function isPdf(name) {
   return /\.pdf$/i.test(name)
 }
 
-/**
- * Mock upload — placeholder until POST /sources ships.
- * Mirrors the backend SourceOut shape (id, name, type, status, size_bytes,
- * page_count, error, created_at, updated_at) plus `pages` used by the
- * placeholder chat answers.
- */
-async function uploadSourceMock(file) {
-  const id = `src-${Math.random().toString(36).slice(2, 9)}`
-  // Approximate the ingest pipeline duration until the real endpoint exists.
-  await new Promise((resolve) => setTimeout(resolve, 650 * 5))
-  const now = new Date().toISOString()
-  return {
-    id,
-    notebookId: "workspace",
-    name: file.name.replace(/\.pdf$/i, ""),
-    type: "pdf",
-    status: "ready",
-    sizeBytes: file.size || 1_234_567,
-    pageCount: 18,
-    error: null,
-    createdAt: now,
-    updatedAt: now,
-    pages: [
-      {
-        pageNumber: 1,
-        text: "This document was just uploaded. In the real app, the backend extracts its text and chunks it into a vector index so the assistant can answer questions about it.",
-      },
-    ],
-  }
-}
-
 export function SourcePanel({ collapsed, onToggleCollapse }) {
-  const { sources, addSource } = useWorkspace()
+  const { sources, uploadSources } = useWorkspace()
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -55,14 +24,17 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
     rejected.forEach(() => toast.error("Only PDF files are supported."))
     if (accepted.length === 0) return
     setBusy(true)
-    await Promise.all(
-      accepted.map(async (file) => {
-        const source = await uploadSourceMock(file)
-        addSource(source)
-        toast.success(`"${source.name}" added to your sources`)
-      }),
-    )
-    setBusy(false)
+    try {
+      const { uploaded, failed } = await uploadSources(accepted)
+      uploaded.forEach((source) =>
+        toast.success(`"${source.name}" added to your sources`),
+      )
+      failed.forEach(({ name, message }) =>
+        toast.error(`"${name}" — ${message}`),
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   /* Collapsed: a slim vertical rail to reopen the panel. */
@@ -103,6 +75,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
       {/* Add sources */}
       <div className="px-4 pt-3">
         <SourceUploadModal
+          onUpload={handleFiles}
           trigger={
             <UI.Button
               disabled={busy}
@@ -164,6 +137,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
         <p className="px-6 pb-4 text-center text-[13px] text-[#9aa0a6]">
           Drop files here or{" "}
           <SourceUploadModal
+            onUpload={handleFiles}
             trigger={
               <span className="cursor-pointer font-medium text-[#8ab4f8] hover:underline">
                 add a source

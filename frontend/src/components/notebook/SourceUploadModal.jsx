@@ -11,21 +11,11 @@ function isPdf(name) {
 }
 
 /**
- * Placeholder for the real upload handler.
- * TODO: implement — this is where the PDF(s) should be uploaded to the
- * backend (e.g. POST /sources) and added to the workspace.
- * Note: this sits outside the component, so it can't use hooks. When you
- * implement it, either move it inside the component (to access
- * `addSource` from useWorkspace) or have it return the uploaded source
- * and call `addSource` from handleUpload.
- * @param {File[]} files The PDF files the user picked.
+ * Modal to upload PDF sources. Accepts a `trigger` element to open it and an
+ * `onUpload(files)` callback that performs the real upload (the parent owns
+ * the upload logic so it can access the workspace/API).
  */
-function onUploadHandler(files) {
-  console.log("onUploadHandler placeholder — implement the real upload:", files)
-}
-
-/** Modal to upload PDF sources. Accepts a `trigger` element to open it. */
-export function SourceUploadModal({ trigger }) {
+export function SourceUploadModal({ trigger, onUpload }) {
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState([])
   const [dragging, setDragging] = useState(false)
@@ -44,7 +34,7 @@ export function SourceUploadModal({ trigger }) {
     const targets = [...files]
     setFiles([])
     setOpen(false)
-    onUploadHandler(targets)
+    onUpload?.(targets)
   }
 
   return (
