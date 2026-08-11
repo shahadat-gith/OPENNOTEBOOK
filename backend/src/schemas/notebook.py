@@ -14,6 +14,17 @@ class NotebookCreate(BaseModel):
             raise ValueError("Title cannot be blank")
         return title
 
+class NotebookUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=160)
+
+    @field_validator("title")
+    @classmethod
+    def _strip_title(cls, v: str) -> str:
+        title = v.strip()
+        if not title:
+            raise ValueError("Title cannot be blank")
+        return title
+
 class NotebookOut(BaseModel):
     id: str
     title: str

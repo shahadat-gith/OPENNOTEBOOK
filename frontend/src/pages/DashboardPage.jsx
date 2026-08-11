@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import { MdAdd, MdBook, MdChevronRight, MdLogout, MdSchedule } from "react-icons/md"
+import { MdAdd, MdBook, MdChevronRight, MdDelete, MdLogout, MdSchedule } from "react-icons/md"
 import { Home } from "@/components/home"
 import { Shared } from "@/components/shared"
 import { UI } from "@/components/ui"
@@ -52,6 +52,8 @@ export function DashboardPage() {
   const [notebooks, setNotebooks] = useState([])
   const [busy, setBusy] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -81,6 +83,21 @@ export function DashboardPage() {
   function openNotebook(notebook) {
 
     navigate(`/notebook?id=${notebook.id}&title=${encodeURIComponent(notebook.title)}`)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget || deleteBusy) return
+    setDeleteBusy(true)
+    try {
+      await api.delete(`/notebooks/${deleteTarget.id}`)
+      setNotebooks((prev) => prev.filter((n) => n.id !== deleteTarget.id))
+      toast.success(`"${deleteTarget.title}" deleted`)
+    } catch (error) {
+      toast.error(error.message || "Could not delete the notebook.")
+    } finally {
+      setDeleteTarget(null)
+      setDeleteBusy(false)
+    }
   }
 
   if (busy) return <LoadingState />
@@ -137,15 +154,22 @@ export function DashboardPage() {
 
           {}
           {notebooks.map((notebook, i) => (
-            <motion.button
+            <motion.div
               key={notebook.id}
-              type="button"
               variants={fadeUp}
               custom={i + 1}
               initial="hidden"
               animate="visible"
               onClick={() => openNotebook(notebook)}
-              className="group relative flex min-h-40 flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d20] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-xl hover:shadow-black/30"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  openNotebook(notebook)
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="group relative flex min-h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d20] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-xl hover:shadow-black/30 focus-visible:ring-2 focus-visible:ring-[#3b82f6]/40 outline-none"
             >
               {}
               <div
@@ -172,12 +196,47 @@ export function DashboardPage() {
                 </span>
                 <MdChevronRight className="ml-auto size-4 text-[#7c8189] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#8ab4f8]" />
               </div>
-            </motion.button>
+
+              {}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDeleteTarget(notebook)
+                }}
+                aria-label={`Delete ${notebook.title}`}
+                className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-[#262a30] text-[#9aa0a6] opacity-0 ring-1 ring-white/10 transition-all duration-200 group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400 focus-visible:opacity-100"
+              >
+                <MdDelete className="size-4" />
+              </button>
+            </motion.div>
           ))}
         </div>
       </main>
 
       <Home.CreateNotebookDialog open={createOpen} onOpenChange={setCreateOpen} />
+
+      <UI.AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <UI.AlertDialogContent>
+          <UI.AlertDialogHeader>
+            <UI.AlertDialogTitle>Delete notebook?</UI.AlertDialogTitle>
+            <UI.AlertDialogDescription>
+              {`"${deleteTarget?.title ?? ""}" and all of its sources and chat history will be permanently deleted. This cannot be undone.`}
+            </UI.AlertDialogDescription>
+          </UI.AlertDialogHeader>
+          <UI.AlertDialogFooter>
+            <UI.AlertDialogCancel disabled={deleteBusy}>Cancel</UI.AlertDialogCancel>
+            <UI.AlertDialogAction variant="destructive" onClick={confirmDelete} disabled={deleteBusy}>
+              {deleteBusy ? "Deleting…" : "Delete"}
+            </UI.AlertDialogAction>
+          </UI.AlertDialogFooter>
+        </UI.AlertDialogContent>
+      </UI.AlertDialog>
     </div>
   )
 }

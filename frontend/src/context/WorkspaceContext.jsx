@@ -122,9 +122,11 @@ function revealAnswer(assistantId, answer, setMessages, timerRef) {
 }
 
 export function WorkspaceProvider({ children }) {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const notebookId = searchParams.get("id")?.trim() || "";
-  const notebookTitle = searchParams.get("title")?.trim() || "My notebook";
+  const [notebookTitle, setNotebookTitle] = useState(
+    searchParams.get("title")?.trim() || "My notebook",
+  );
 
   const [sources, setSources] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -233,6 +235,24 @@ export function WorkspaceProvider({ children }) {
     setSources((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  const renameNotebook = useCallback(
+    async (title) => {
+      const clean = title.trim();
+      if (!clean || !notebookId) return;
+      await api.patch(`/notebooks/${notebookId}`, { title: clean });
+      setNotebookTitle(clean);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("title", clean);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [notebookId, setSearchParams],
+  );
+
   const sendMessage = useCallback(
     async (text) => {
       if (!notebookId) return;
@@ -312,6 +332,7 @@ export function WorkspaceProvider({ children }) {
         uploadSources,
         removeSource,
         sendMessage,
+        renameNotebook,
       }}
     >
       {children}

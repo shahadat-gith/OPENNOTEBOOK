@@ -1,7 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
-from schemas.notebook import NotebookCreate, NotebookOut
-from services.notebook import count_sources, create_notebook, list_notebooks
+from schemas.notebook import NotebookCreate, NotebookOut, NotebookUpdate
+from services.notebook import (
+    count_sources,
+    create_notebook,
+    delete_notebook,
+    list_notebooks,
+    update_notebook,
+)
 from utils.deps import CurrentUser, Db
 
 router = APIRouter(prefix="/notebooks", tags=["notebooks"])
@@ -48,4 +54,55 @@ async def create(
         created_at=notebook.created_at,
         updated_at=notebook.updated_at,
     )
+
+@router.patch("/{notebook_id}", response_model=NotebookOut)
+async def rename(
+    notebook_id: str,
+    payload: NotebookUpdate,
+    current_user: CurrentUser,
+    db: Db,
+) -> NotebookOut:
+
+    notebook = await update_notebook(
+        db,
+        notebook_id,
+        current_user.id,
+        payload.title,
+    )
+
+    if not notebook:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notebook not found",
+        )
+
+    return NotebookOut(
+        id=notebook.id,
+        title=notebook.title,
+        description=notebook.description,
+        source_count=await count_sources(db, notebook.id),
+        created_at=notebook.created_at,
+        updated_at=notebook.updated_at,
+    )
+
+@router.delete("/{notebook_id}")
+async def delete(
+    notebook_id: str,
+    current_user: CurrentUser,
+    db: Db,
+) -> dict[str, str]:
+
+    deleted = await delete_notebook(
+        db,
+        notebook_id,
+        current_user.id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notebook not found",
+        )
+
+    return {"status": "ok"}
 
