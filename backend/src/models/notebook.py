@@ -1,12 +1,9 @@
-"""Notebook document model (MongoDB collection: ``notebooks``)."""
-
 from datetime import datetime
 from typing import ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
 from .common import ensure_utc, new_id, utcnow
-
 
 class Notebook(BaseModel):
 
@@ -34,3 +31,4 @@ class Notebook(BaseModel):
         doc = dict(doc)
         doc["id"] = doc.pop("_id")
         return cls.model_validate(doc)
+

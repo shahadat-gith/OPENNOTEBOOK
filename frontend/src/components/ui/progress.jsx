@@ -25,3 +25,4 @@ function Progress({ className, value, ...props }) {
 }
 
 export { Progress }
+

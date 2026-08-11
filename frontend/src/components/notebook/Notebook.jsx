@@ -14,14 +14,13 @@ const HEADER_ACTIONS = [
   { key: "settings", label: "Settings", icon: MdSettings },
 ]
 
-/** The notebook workspace: Sources panel + Chat panel, with a top bar. */
 export function Notebook() {
   const { notebookTitle } = useWorkspace()
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false)
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[#121417] text-[#e3e3e3]">
-      {/* Top bar: brand + notebook title → home */}
+      {}
       <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-[#1a1d20] px-4 sm:px-6">
         <Link
           to="/"
@@ -52,7 +51,7 @@ export function Notebook() {
         </div>
       </header>
 
-      {/* Panels */}
+      {}
       <div className="flex min-h-0 flex-1">
         <SourcePanel
           collapsed={sourcesCollapsed}
@@ -69,3 +68,4 @@ export function Notebook() {
     </div>
   )
 }
+

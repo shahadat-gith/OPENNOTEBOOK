@@ -10,11 +10,6 @@ function isPdf(name) {
   return /\.pdf$/i.test(name)
 }
 
-/**
- * Modal to upload PDF sources. Accepts a `trigger` element to open it and an
- * `onUpload(files)` callback that performs the real upload (the parent owns
- * the upload logic so it can access the workspace/API).
- */
 export function SourceUploadModal({ trigger, onUpload }) {
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState([])
@@ -133,3 +128,4 @@ export function SourceUploadModal({ trigger, onUpload }) {
     </UI.Dialog>
   )
 }
+

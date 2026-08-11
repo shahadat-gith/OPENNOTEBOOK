@@ -1,10 +1,7 @@
-"""Notebook business logic against MongoDB."""
-
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from models.notebook import Notebook
 from models.source import Source
-
 
 async def list_notebooks(
     db: AsyncIOMotorDatabase,
@@ -12,7 +9,6 @@ async def list_notebooks(
 ) -> list[Notebook]:
     cursor = db[Notebook.Collection].find({"owner_id": owner_id}).sort("updated_at", -1)
     return [Notebook.from_document(doc) async for doc in cursor]
-
 
 async def get_notebook(
     db: AsyncIOMotorDatabase,
@@ -23,7 +19,6 @@ async def get_notebook(
         {"_id": notebook_id, "owner_id": owner_id}
     )
     return Notebook.from_document(doc) if doc else None
-
 
 async def create_notebook(
     db: AsyncIOMotorDatabase,
@@ -39,6 +34,6 @@ async def create_notebook(
     await db[Notebook.Collection].insert_one(notebook.to_document())
     return notebook
 
-
 async def count_sources(db: AsyncIOMotorDatabase, notebook_id: str) -> int:
     return await db[Source.Collection].count_documents({"notebook_id": notebook_id})
+

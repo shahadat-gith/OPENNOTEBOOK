@@ -6,16 +6,11 @@ import { UI } from "@/components/ui"
 import { api } from "@/configs/axios"
 import { toNotebook } from "@/utils/notebooks"
 
-/**
- * Create-notebook form. Creates the notebook through the backend, then opens
- * the workspace page with the notebook id + title as URL query params.
- */
 export function CreateNotebookDialog({ open, onOpenChange }) {
   const [title, setTitle] = useState("")
   const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
 
-  // Start each open with a clean field.
   useEffect(() => {
     if (open) {
       setTitle("")
@@ -82,3 +77,4 @@ export function CreateNotebookDialog({ open, onOpenChange }) {
     </UI.Dialog>
   )
 }
+

@@ -1,23 +1,12 @@
-
-"""Source endpoints.
-POST   /api/v1/sources        → SourceOut
-GET    /api/v1/sources        → list[SourceOut]
-DELETE /api/v1/sources/{id}   → {status: "ok"}
-"""
-
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
-from models import Source
-from schemas import SourceOut
-from services import (
-    delete_from_s3,
-    delete_source_chunks,
-    get_notebook,
-    upload_to_s3,
-)
-from sqs import publish_source_processing
-from utils import CurrentUser, Db
-
+from models.source import Source
+from schemas.source import SourceOut
+from services.notebook import get_notebook
+from services.qdrant import delete_source_chunks
+from services.s3 import delete_from_s3, upload_to_s3
+from sqs.producer import publish_source_processing
+from utils.deps import CurrentUser, Db
 
 router = APIRouter(
     prefix="/sources",
@@ -48,7 +37,6 @@ async def upload_source(
             detail="Only PDF files are supported",
         )
 
-    # Only allow uploading to notebooks the user owns.
     notebook = await get_notebook(
         db,
         notebook_id,
@@ -61,7 +49,6 @@ async def upload_source(
             detail="Notebook not found",
         )
 
-    # Get file size without loading the whole file into memory.
     file.file.seek(0, 2)
     size_bytes = file.file.tell()
     file.file.seek(0)
@@ -82,7 +69,6 @@ async def upload_source(
     )
 
     try:
-        # Upload original document to S3.
         upload_to_s3(
             file.file,
             s3_key,
@@ -92,20 +78,17 @@ async def upload_source(
         source.s3_key = s3_key
         source.status = "processing"
 
-        # Store source metadata.
         await db[Source.Collection].insert_one(
             source.to_document()
         )
 
     except Exception as error:
-        # Cleanup S3 if anything after upload fails.
         if source.s3_key:
             try:
                 delete_from_s3(source.s3_key)
             except Exception:
                 pass
 
-        # Remove the source document if it was already inserted.
         try:
             await db[Source.Collection].delete_one(
                 {"_id": source.id}
@@ -118,9 +101,6 @@ async def upload_source(
             detail=f"Failed to upload source: {error}",
         ) from error
 
-    # Queue asynchronous PDF processing. If the queue is unavailable the
-    # upload itself already succeeded (S3 + metadata) — mark the source
-    # failed with the reason instead of rejecting the upload.
     try:
         publish_source_processing(
             source_id=source.id,
@@ -196,7 +176,6 @@ async def delete_source(
 
     s3_key = source_doc.get("s3_key")
 
-    # Delete original document from S3.
     if s3_key:
         try:
             delete_from_s3(s3_key)
@@ -206,7 +185,6 @@ async def delete_source(
                 detail="Failed to delete source file",
             ) from error
 
-    # Delete all embeddings belonging to this source.
     try:
         delete_source_chunks(source_id)
     except Exception as error:
@@ -215,10 +193,8 @@ async def delete_source(
             detail="Failed to delete source embeddings",
         ) from error
 
-    # Delete source metadata from MongoDB.
     await db[Source.Collection].delete_one(
         {"_id": source_id}
     )
 
     return {"status": "ok"}
-

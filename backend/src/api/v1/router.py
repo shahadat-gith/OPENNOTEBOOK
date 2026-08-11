@@ -1,5 +1,3 @@
-"""Aggregate all v1 routers into a single ``api_router``."""
-
 from fastapi import APIRouter
 
 from .auth import router as auth_router
@@ -13,3 +11,4 @@ api_router.include_router(auth_router)
 api_router.include_router(notebooks_router)
 api_router.include_router(sources_router)
 api_router.include_router(chat_router)
+

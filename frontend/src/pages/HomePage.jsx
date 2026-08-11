@@ -17,9 +17,8 @@ import { Shared } from "@/components/shared"
 import { UI } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 
-/* Presentation icons mapped to HOW_STEPS by index. */
 const HOW_ICONS = [MdUploadFile, MdQuestionAnswer, MdFormatQuote]
-/* Icons mapped to USE_STEPS by index. */
+
 const USE_ICONS = [MdAdd, MdDescription, MdQuestionAnswer, MdCheckCircle]
 
 const HOW_STEPS = [
@@ -56,7 +55,6 @@ const USE_STEPS = [
   },
 ]
 
-/* Fade-up animation used across the page. */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: (i = 0) => ({
@@ -75,13 +73,11 @@ function HeroBadge() {
   )
 }
 
-
 export function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [createOpen, setCreateOpen] = useState(false)
 
-  /** Open the create dialog when signed in; otherwise head to sign in. */
   function handleCreate() {
     if (user) setCreateOpen(true)
     else navigate("/login")
@@ -89,7 +85,7 @@ export function HomePage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[#121417] text-[#e3e3e3]">
-      {/* Top nav */}
+      {}
       <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-[#121417]/80 px-4 backdrop-blur-sm sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -131,7 +127,7 @@ export function HomePage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero */}
+        {}
         <section className="relative overflow-hidden">
           <div
             aria-hidden="true"
@@ -185,7 +181,7 @@ export function HomePage() {
         <ReadyCta onOpen={handleCreate} />
       </main>
 
-      {/* Footer */}
+      {}
       <footer className="flex h-12 shrink-0 items-center justify-center border-t border-border bg-[#121417] px-4">
         <p className="text-[11px] text-[#9aa0a6]">OpenNotebook may make mistakes — please verify important information.</p>
       </footer>
@@ -194,8 +190,6 @@ export function HomePage() {
     </div>
   )
 }
-
-
 
 function HowItWorks() {
   return (

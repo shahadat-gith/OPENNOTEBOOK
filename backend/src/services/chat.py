@@ -1,9 +1,6 @@
-"""Chat message persistence against MongoDB."""
-
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from models.message import Message
-
 
 async def list_messages(
     db: AsyncIOMotorDatabase,
@@ -11,7 +8,6 @@ async def list_messages(
     *,
     limit: int = 100,
 ) -> list[Message]:
-    """Return a notebook's messages, oldest first."""
 
     cursor = (
         db[Message.Collection]
@@ -25,15 +21,14 @@ async def list_messages(
         async for document in cursor
     ]
 
-
 async def save_message(
     db: AsyncIOMotorDatabase,
     message: Message,
 ) -> Message:
-    """Persist a chat message and return it."""
 
     await db[Message.Collection].insert_one(
         message.to_document()
     )
 
     return message
+

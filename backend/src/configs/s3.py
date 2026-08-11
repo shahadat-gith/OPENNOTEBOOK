@@ -14,4 +14,3 @@ s3 = boto3.client(
     region_name="ap-south-1",
 )
 
-

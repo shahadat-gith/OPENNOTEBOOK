@@ -1,12 +1,3 @@
-/**
- * Barrel for the UI kit. Import once and use the object style:
- *
- *   import { UI } from "@/components/ui"
- *   <UI.Button /> <UI.Dialog>…</UI.Dialog>
- *
- * NOTE: files inside this folder must import siblings directly (e.g.
- * `./button`), never via this barrel — that would create a circular import.
- */
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,3 +115,4 @@ export const UI = {
   TooltipProvider,
   TooltipTrigger,
 }
+

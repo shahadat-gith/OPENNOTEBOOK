@@ -1,18 +1,15 @@
-"""Shared FastAPI dependencies."""
-
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from configs import get_db
+from configs.db import get_db
 from models.user import User
 from utils.security import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
-# Database dependency alias shared by all routers that touch MongoDB.
 Db = Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 
 
@@ -23,7 +20,6 @@ async def get_current_user(
     ],
     db: Db,
 ) -> User:
-    """Resolve the user from the ``Authorization: Bearer <token>`` header."""
     unauthorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",
@@ -38,8 +34,6 @@ async def get_current_user(
     if user_id is None:
         raise unauthorized
 
-    # Imported lazily to avoid a module-level cycle:
-    # utils.deps → services.auth → utils.security → utils
     from services.auth import get_user_by_id
 
     user = await get_user_by_id(db, user_id)

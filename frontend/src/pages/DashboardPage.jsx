@@ -65,8 +65,7 @@ export function DashboardPage() {
   }
 
   function openNotebook(notebook) {
-    // `id` will drive which notebook's sources load once the backend ships;
-    // the notebook page reads the title from `?title=` today.
+
     navigate(`/notebook?id=${notebook.id}&title=${encodeURIComponent(notebook.title)}`)
   }
 
@@ -74,7 +73,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[#121417] text-[#e3e3e3]">
-      {/* Top bar */}
+      {}
       <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-[#121417]/80 px-4 backdrop-blur-sm sm:px-6">
         <Link to="/" className="flex min-w-0 items-center gap-3 rounded-lg transition-opacity hover:opacity-80">
           <Shared.BrandMark className="size-9 [&>svg]:size-5" />
@@ -106,7 +105,7 @@ export function DashboardPage() {
         </motion.div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Create new notebook */}
+          {}
           <motion.button
             type="button"
             variants={fadeUp}
@@ -122,7 +121,7 @@ export function DashboardPage() {
             <span className="text-sm font-medium">Create new notebook</span>
           </motion.button>
 
-          {/* Notebook cards */}
+          {}
           {notebooks.map((notebook, i) => (
             <motion.button
               key={notebook.id}
@@ -134,7 +133,7 @@ export function DashboardPage() {
               onClick={() => openNotebook(notebook)}
               className="group relative flex min-h-40 flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d20] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-xl hover:shadow-black/30"
             >
-              {/* Brand hairline on hover */}
+              {}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-[#8ab4f8]/0 transition-colors duration-300 group-hover:bg-[#8ab4f8]/60"
@@ -168,3 +167,4 @@ export function DashboardPage() {
     </div>
   )
 }
+

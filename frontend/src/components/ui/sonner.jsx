@@ -7,7 +7,6 @@ import {
   MdHourglassTop,
 } from "react-icons/md"
 
-// The app is dark-only, so the toaster is always dark.
 const Toaster = ({ ...props }) => {
   return (
     <Sonner
@@ -37,3 +36,4 @@ const Toaster = ({ ...props }) => {
 }
 
 export { Toaster }
+

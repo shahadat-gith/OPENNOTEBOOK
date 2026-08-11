@@ -1,4 +1,3 @@
-/** Backend notebook shape (snake_case) → UI shape (camelCase). */
 export function toNotebook(nb) {
   return {
     id: nb.id,
@@ -9,7 +8,6 @@ export function toNotebook(nb) {
   }
 }
 
-/** Backend source shape (snake_case) → UI shape (camelCase). */
 export function toSource(source) {
   return {
     id: source.id,
@@ -25,23 +23,13 @@ export function toSource(source) {
   }
 }
 
-/** Backend message shape (snake_case) → UI shape (camelCase). */
 export function toMessage(message) {
   return {
     id: message.id,
     role: message.role,
     status: message.status ?? "complete",
     content: message.content ?? "",
-    sourceIds: message.source_ids ?? [],
-    citations: (message.citations ?? []).map((c) => ({
-      id: c.id,
-      index: c.index,
-      sourceId: c.source_id,
-      sourceName: c.source_name,
-      quote: c.quote,
-      page: c.page ?? null,
-      relevance: c.relevance ?? 0,
-    })),
     createdAt: message.created_at,
   }
 }
+

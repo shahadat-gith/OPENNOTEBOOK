@@ -11,7 +11,6 @@ function FullScreenLoader() {
   )
 }
 
-/** Requires a signed-in user — otherwise redirects to /login. */
 function ProtectedRoute({ children }) {
   const { user, initializing } = useAuth()
   const location = useLocation()
@@ -21,7 +20,6 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-/** Login/signup pages — signed-in users go straight to the dashboard. */
 function GuestOnlyRoute({ children }) {
   const { user, initializing } = useAuth()
 
@@ -36,9 +34,9 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Entry page: explains the app and creates notebooks. */}
+            {}
             <Route path="/" element={<Pages.HomePage />} />
-            {/* Auth pages (hidden once signed in). */}
+            {}
             <Route
               path="/login"
               element={
@@ -55,7 +53,7 @@ export default function App() {
                 </GuestOnlyRoute>
               }
             />
-            {/* Dashboard: all of the user's notebooks (auth required). */}
+            {}
             <Route
               path="/dashboard"
               element={
@@ -64,7 +62,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            {/* The notebook workspace (auth required). */}
+            {}
             <Route
               path="/notebook"
               element={
@@ -73,7 +71,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Anything unknown lands on the entry page. */}
+            {}
             <Route path="*" element={<Pages.HomePage />} />
           </Routes>
         </BrowserRouter>
@@ -82,3 +80,4 @@ export default function App() {
     </UI.TooltipProvider>
   )
 }
+

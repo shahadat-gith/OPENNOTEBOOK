@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException, status
 
-from schemas import LoginRequest, SignupRequest, Token, UserOut
-from services import authenticate_user, create_user, update_last_login
-from utils import CurrentUser, Db, create_access_token
+from schemas.auth import LoginRequest, SignupRequest, Token, UserOut
+from services.auth import authenticate_user, create_user, update_last_login
+from utils.deps import CurrentUser, Db
+from utils.security import create_access_token
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
-
 
 @router.post(
     "/signup",
@@ -33,7 +33,6 @@ async def signup(
         )
 
     return UserOut(id=user.id, name=user.name, email=user.email)
-
 
 @router.post(
     "/login",
@@ -60,13 +59,11 @@ async def login(
 
     return Token(access_token=create_access_token(user.id))
 
-
 @router.post(
     "/logout",
 )
 async def logout() -> dict[str, str]:
     return {"status": "ok"}
-
 
 @router.get(
     "/me",
@@ -76,3 +73,4 @@ async def me(
     current_user: CurrentUser,
 ) -> UserOut:
     return UserOut(id=current_user.id, name=current_user.name, email=current_user.email)
+

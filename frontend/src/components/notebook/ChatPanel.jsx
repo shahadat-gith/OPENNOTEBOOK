@@ -36,7 +36,7 @@ export function ChatPanel() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-[#1a1d20]">
-      {/* Thread / welcome */}
+      {}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 py-8 sm:px-8">
           {empty ? (
@@ -46,7 +46,7 @@ export function ChatPanel() {
               transition={{ duration: 0.45, ease: "easeOut" }}
               className="relative flex flex-1 flex-col items-center justify-center overflow-hidden text-center"
             >
-              {/* Ambient glow behind the welcome tile */}
+              {}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute top-1/2 left-1/2 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-500/15 via-indigo-500/10 to-purple-600/15 blur-3xl"
@@ -75,11 +75,10 @@ export function ChatPanel() {
                 transition={{ delay: 0.26, duration: 0.4, ease: "easeOut" }}
                 className="relative mt-3 max-w-md text-[15px] leading-relaxed text-[#9aa0a6]"
               >
-                Ask anything about your sources and get answers grounded in your documents — every
-                response is backed by citations, so you can always see exactly where the information
-                came from.
+                Ask anything about your sources and get clear answers grounded in your
+                uploaded documents.
               </motion.p>
-             
+
             </motion.div>
           ) : (
             <div className="flex flex-1 flex-col justify-end gap-7">
@@ -106,7 +105,6 @@ export function ChatPanel() {
         </div>
       </div>
 
-      {/* Composer */}
       <div className="mx-auto w-full max-w-3xl px-4 pb-4 sm:px-8">
         <div
           className={cn(
@@ -129,7 +127,7 @@ export function ChatPanel() {
             rows={1}
             className="text-[15px] text-[#e3e3e3] shadow-none focus-visible:ring-0 placeholder:text-[#7c8189]"
           />
-         
+
           <button
             type="button"
             onClick={submit}
@@ -149,3 +147,4 @@ export function ChatPanel() {
     </div>
   )
 }
+

@@ -1,17 +1,12 @@
-import { Fragment } from "react"
+import ReactMarkdown from "react-markdown"
 import { cn } from "@/utils/cn"
 
-/** Renders assistant content: paragraphs, **bold**, and [[citation:n]] chips. */
 export function RichText({
   content,
   streaming,
-  onCitationClick,
-  activeCitation,
   className,
 }) {
-  const paragraphs = content.split(/\n{2,}/).filter(Boolean)
-
-  if (paragraphs.length === 0 && streaming) {
+  if (!content.trim() && streaming) {
     return (
       <span className="flex gap-1 py-1" aria-label="Thinking">
         {[0, 1, 2].map((i) => (
@@ -27,50 +22,63 @@ export function RichText({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {paragraphs.map((paragraph, pIndex) => (
-        <p key={pIndex} className="leading-relaxed">
-          {renderInline(paragraph, onCitationClick, activeCitation)}
-        </p>
-      ))}
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => (
+            <p className="leading-relaxed">{children}</p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-foreground">{children}</strong>
+          ),
+          em: ({ children }) => <em>{children}</em>,
+          ul: ({ children }) => (
+            <ul className="list-disc space-y-1 pl-5">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal space-y-1 pl-5">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="leading-relaxed">{children}</li>
+          ),
+          h1: ({ children }) => (
+            <h1 className="text-xl font-bold tracking-tight">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-lg font-bold tracking-tight">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-base font-semibold tracking-tight">{children}</h3>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-2 border-muted pl-3 text-muted-foreground italic">
+              {children}
+            </blockquote>
+          ),
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline underline-offset-2 hover:text-primary/80"
+            >
+              {children}
+            </a>
+          ),
+          code: ({ children }) => (
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[13px]">
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-[13px] leading-relaxed [&>code]:bg-transparent [&>code]:p-0">
+              {children}
+            </pre>
+          ),
+          hr: () => <hr className="border-muted" />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
-  )
-}
-
-function renderInline(text, onCitationClick, activeCitation) {
-  // Split on [[citation:n]] markers.
-  const parts = text.split(/\[\[citation:(\d+)\]\]/g)
-  return parts.map((part, i) => {
-    if (i % 2 === 1) {
-      const n = Number(part)
-      return (
-        <button
-          key={i}
-          type="button"
-          onClick={() => onCitationClick?.(n)}
-          className={cn(
-            "mx-0.5 inline-flex size-5 items-center justify-center rounded-md align-middle text-[11px] font-semibold transition-colors",
-            "bg-accent text-accent-foreground hover:bg-primary/15 hover:text-primary",
-            activeCitation === n && "bg-primary text-primary-foreground ring-1 ring-primary/30",
-          )}
-          aria-label={`Citation ${n}`}
-        >
-          {n}
-        </button>
-      )
-    }
-    return <Fragment key={i}>{renderBold(part)}</Fragment>
-  })
-}
-
-function renderBold(text) {
-  const parts = text.split(/\*\*(.+?)\*\*/g)
-  return parts.map((part, i) =>
-    i % 2 === 1 ? (
-      <strong key={i} className="font-semibold text-foreground">
-        {part}
-      </strong>
-    ) : (
-      <Fragment key={i}>{part}</Fragment>
-    ),
   )
 }

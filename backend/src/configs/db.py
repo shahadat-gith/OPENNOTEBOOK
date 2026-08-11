@@ -1,5 +1,3 @@
-
-
 import os
 from typing import Annotated
 
@@ -12,10 +10,8 @@ from motor.motor_asyncio import (
 
 load_dotenv()
 
-
 MONGODB_URI = os.environ["MONGODB_URI"]
 DB_NAME = os.environ["DB_NAME"]
-
 
 client: AsyncIOMotorClient = AsyncIOMotorClient(
     MONGODB_URI,
@@ -24,29 +20,22 @@ client: AsyncIOMotorClient = AsyncIOMotorClient(
 
 db: AsyncIOMotorDatabase = client[DB_NAME]
 
-
 def get_db() -> AsyncIOMotorDatabase:
-    """FastAPI dependency — return the shared MongoDB database handle."""
     return db
-
 
 Db = Annotated[
     AsyncIOMotorDatabase,
     Depends(get_db),
 ]
 
-
 async def init_db() -> None:
-    """Create MongoDB indexes during application startup.
-
-    Startup must not crash the app when MongoDB is temporarily unreachable
-    (e.g. Atlas network-access misconfiguration); indexes are re-attempted on
-    the next restart.
-    """
 
     from urllib.parse import urlsplit
 
-    from models import Message, Notebook, Source, User
+    from models.message import Message
+    from models.notebook import Notebook
+    from models.source import Source
+    from models.user import User
 
     try:
         await db[User.Collection].create_index(
@@ -68,7 +57,7 @@ async def init_db() -> None:
         await db[Message.Collection].create_index(
             "notebook_id",
         )
-    except Exception as error:  # noqa: BLE001 — startup must not crash the app
+    except Exception as error:
         try:
             host = urlsplit(MONGODB_URI).hostname or MONGODB_URI
         except ValueError:
@@ -78,7 +67,7 @@ async def init_db() -> None:
             f"- starting without indexes: {error}"
         )
 
-
 async def close_db() -> None:
-    """Close the MongoDB connection pool."""
+
     client.close()
+

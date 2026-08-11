@@ -6,7 +6,6 @@ import { SourceTypeIcon, SOURCE_TYPE_META } from "./SourceTypeIcon"
 import { UI } from "@/components/ui"
 import { useWorkspace } from "@/context/WorkspaceContext"
 
-/** A single uploaded source item: icon tile, name, status, remove menu. */
 export function UploadedSourceItems({ source }) {
   const { removeSource } = useWorkspace()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -75,3 +74,4 @@ export function UploadedSourceItems({ source }) {
     </div>
   )
 }
+

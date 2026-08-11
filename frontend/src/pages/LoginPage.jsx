@@ -59,7 +59,7 @@ export function LoginPage() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#121417] px-4 text-[#e3e3e3]">
-      {/* Ambient glow */}
+      {}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute top-0 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/15 via-indigo-500/10 to-purple-600/15 blur-3xl"
@@ -185,3 +185,4 @@ export function LoginPage() {
     </div>
   )
 }
+

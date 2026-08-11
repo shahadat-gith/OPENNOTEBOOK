@@ -37,7 +37,6 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
     }
   }
 
-  /* Collapsed: a slim vertical rail to reopen the panel. */
   if (collapsed) {
     return (
       <div className="flex w-12 shrink-0 flex-col items-center border-r border-border bg-[#1a1d20] pt-3">
@@ -58,7 +57,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
 
   return (
     <div className="flex w-full shrink-0 flex-col border-r border-border bg-[#1a1d20] lg:w-[400px]">
-      {/* Panel header */}
+      {}
       <div className="flex items-center justify-between px-5 pt-4">
         <h2 className="text-base font-semibold text-[#e3e3e3]">Sources</h2>
         <UI.Button
@@ -72,7 +71,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
         </UI.Button>
       </div>
 
-      {/* Add sources */}
+      {}
       <div className="px-4 pt-3">
         <SourceUploadModal
           onUpload={handleFiles}
@@ -88,7 +87,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
         />
       </div>
 
-      {/* Sources list or empty dropzone */}
+      {}
       <div
         className="flex min-h-0 flex-1 flex-col"
         onDragOver={(e) => {
@@ -132,7 +131,7 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
         )}
       </div>
 
-      {/* Drop hint */}
+      {}
       {sources.length === 0 && (
         <p className="px-6 pb-4 text-center text-[13px] text-[#9aa0a6]">
           Drop files here or{" "}
@@ -149,3 +148,4 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
     </div>
   )
 }
+

@@ -20,21 +20,15 @@ export function clearToken() {
 
 export const api = axios.create({
   baseURL: API_BASE,
-  // NOTE: do NOT set a global Content-Type here. axios 1.19 converts
-  // FormData payloads to JSON when the request header is application/json,
-  // which breaks multipart uploads (POST /sources → 422). For plain object
-  // bodies axios sets application/json automatically.
+
 })
 
-// Attach the Bearer token to every request.
 api.interceptors.request.use((config) => {
   const token = getToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Normalize error messages and drop the session when a request is rejected
-// with 401 (expired / invalid token) — AuthContext listens for the event.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -53,3 +47,4 @@ api.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+

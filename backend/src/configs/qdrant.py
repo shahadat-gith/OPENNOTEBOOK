@@ -1,5 +1,3 @@
-"""Qdrant vector database configuration."""
-
 import os
 
 from dotenv import load_dotenv
@@ -12,15 +10,12 @@ from qdrant_client.models import (
 
 load_dotenv()
 
-
 QDRANT_API_KEY = os.environ["QDRANT_API_KEY"]
 QDRANT_ENDPOINT = os.environ["QDRANT_ENDPOINT"]
 
-# pplx-embed-v1-4b produces 2560-dimensional vectors.
 VECTOR_SIZE = 2560
 
 COLLECTION_NAME = "opennotebook_embeddings"
-
 
 qdrant = QdrantClient(
     url=QDRANT_ENDPOINT,
@@ -29,7 +24,6 @@ qdrant = QdrantClient(
 
 
 def create_collection() -> None:
-    """Create the embeddings collection and its filter indexes if missing."""
     collections = qdrant.get_collections().collections
 
     if not any(
@@ -44,8 +38,6 @@ def create_collection() -> None:
             ),
         )
 
-    # Notebook-scoped search and source-scoped deletes filter on these
-    # payload fields, which requires keyword payload indexes.
     info = qdrant.get_collection(COLLECTION_NAME)
     indexed = set(info.payload_schema)
 
@@ -60,7 +52,7 @@ def create_collection() -> None:
 
 try:
     create_collection()
-except Exception as error:  # noqa: BLE001 — the API should boot even if Qdrant is down
+except Exception as error:
     print(
         f"[opennotebook] Could not ensure Qdrant collection "
         f"{COLLECTION_NAME!r} exists: {error}"

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { API_BASE, api, getToken } from "@/configs/axios";
+import { api } from "@/configs/axios";
 import { toMessage, toSource } from "@/utils/notebooks";
 
 const WorkspaceContext = createContext(null);
@@ -17,66 +17,110 @@ function uid(prefix) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/**
- * Streams an answer from POST /ask (server-sent events). Yields parsed
- * events: {type:"delta",content}, {type:"done",message}, {type:"error",detail}.
- */
-async function* streamAsk({ question, notebookId }, signal) {
-  const response = await fetch(`${API_BASE}/ask`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({ question, notebook_id: notebookId }),
-    signal,
-  })
-
-  if (!response.ok) {
-    let detail = `Request failed (${response.status})`
-    try {
-      const body = await response.json()
-      if (typeof body.detail === "string") detail = body.detail
-    } catch {
-      // Non-JSON error body — keep the status message.
-    }
-    throw new Error(detail)
-  }
-
-  if (!response.body) {
-    throw new Error("Streaming is not supported by this browser.")
-  }
-
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ""
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-
-    // SSE events are separated by a blank line (\n\n).
-    let separator
-    while ((separator = buffer.indexOf("\n\n")) !== -1) {
-      const raw = buffer.slice(0, separator)
-      buffer = buffer.slice(separator + 2)
-      const dataLine = raw.split("\n").find((line) => line.startsWith("data:"))
-      if (!dataLine) continue
-      try {
-        yield JSON.parse(dataLine.slice(5).trim())
-      } catch {
-        // Malformed event — skip it.
-      }
-    }
-  }
+function isCanceled(error) {
+  return (
+    error?.code === "ERR_CANCELED" ||
+    error?.name === "CanceledError" ||
+    error?.name === "AbortError"
+  );
 }
 
-/**
- * Provides the workspace state (sources, messages) and actions to the whole
- * notebook page. Sources and chat messages are fetched from and synced with
- * the backend (`/api/v1/sources`, `/api/v1/ask`).
- */
+function delay(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    let timer;
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+async function pollForAnswer({ notebookId, afterId, signal }) {
+  const timeoutMs = 90000;
+  const intervalMs = 1200;
+  const maxConsecutiveErrors = 5;
+  const deadline = Date.now() + timeoutMs;
+  let consecutiveErrors = 0;
+
+  while (Date.now() < deadline) {
+    let history;
+    try {
+      const { data } = await api.get("/ask", {
+        params: { notebook_id: notebookId },
+        signal,
+      });
+      history = data;
+      consecutiveErrors = 0;
+    } catch (error) {
+
+      if (isCanceled(error)) throw error;
+      consecutiveErrors += 1;
+      if (consecutiveErrors >= maxConsecutiveErrors) {
+        throw new Error("Could not reach the server. Please try again.");
+      }
+      await delay(intervalMs, signal);
+      continue;
+    }
+
+    const index = history.findIndex((m) => m.id === afterId);
+    const answer =
+      index === -1
+        ? undefined
+        : history.slice(index + 1).find((m) => m.role === "assistant");
+
+    if (answer) return answer;
+
+    await delay(intervalMs, signal);
+  }
+
+  throw new Error("The answer took too long. Please try again.");
+}
+
+function revealAnswer(assistantId, answer, setMessages, timerRef) {
+  return new Promise((resolve) => {
+    const words = (answer.content ?? "").split(" ");
+
+    const duration = Math.min(2600, Math.max(600, words.length * 14));
+    const delay = duration / words.length;
+    let index = 0;
+
+    timerRef.current = setInterval(() => {
+      index += 1;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: words.slice(0, index).join(" ") }
+            : m,
+        ),
+      );
+
+      if (index >= words.length) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, ...toMessage(answer), id: assistantId }
+              : m,
+          ),
+        );
+        resolve();
+      }
+    }, delay);
+  });
+}
+
 export function WorkspaceProvider({ children }) {
   const [searchParams] = useSearchParams();
   const notebookId = searchParams.get("id")?.trim() || "";
@@ -85,15 +129,18 @@ export function WorkspaceProvider({ children }) {
   const [sources, setSources] = useState([]);
   const [messages, setMessages] = useState([]);
 
-  // Aborts any in-flight answer stream when the workspace unmounts.
   const abortRef = useRef(null);
-  useEffect(() => () => abortRef.current?.abort(), []);
+  const timerRef = useRef(null);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      if (timerRef.current) clearInterval(timerRef.current);
+    },
+    [],
+  );
 
-  // Only surface the first load/poll failure — the 2.5s busy poll retries
-  // silently so a transient backend hiccup doesn't spam toasts.
   const [loadErrorShown, setLoadErrorShown] = useState(false);
 
-  /** Fetch the notebook's sources from the backend. */
   const refreshSources = useCallback(async () => {
     if (!notebookId) return;
     try {
@@ -110,12 +157,10 @@ export function WorkspaceProvider({ children }) {
     }
   }, [notebookId, loadErrorShown]);
 
-  // Load sources whenever the notebook changes.
   useEffect(() => {
     void refreshSources();
   }, [refreshSources]);
 
-  // Poll for status changes while any source is still uploading/processing.
   useEffect(() => {
     const busy = sources.some(
       (s) => s.status === "uploading" || s.status === "processing",
@@ -125,7 +170,6 @@ export function WorkspaceProvider({ children }) {
     return () => clearInterval(timer);
   }, [sources, refreshSources]);
 
-  /** Load the notebook's conversation history from the backend. */
   const loadMessages = useCallback(async () => {
     if (!notebookId) return;
     try {
@@ -134,24 +178,18 @@ export function WorkspaceProvider({ children }) {
       });
       setMessages(data.map(toMessage));
     } catch (error) {
-      // History is best-effort: keep the current thread on failure.
+
       if (error.response?.status !== 401) {
         toast.error(error.message || "Could not load chat history.");
       }
     }
   }, [notebookId]);
 
-  // Reset and load the thread whenever the notebook changes.
   useEffect(() => {
     setMessages([]);
     void loadMessages();
   }, [notebookId, loadMessages]);
 
-  /**
-   * Upload one or more PDF files to the backend (POST /sources) and prepend
-   * the returned sources. Each file is attempted independently so one failure
-   * doesn't drop the successful uploads.
-   */
   const uploadSources = useCallback(
     async (files) => {
       if (!notebookId) throw new Error("No notebook selected.");
@@ -178,17 +216,11 @@ export function WorkspaceProvider({ children }) {
     [notebookId],
   );
 
-  /** Delete a source from the backend and remove it from the UI. */
   const removeSource = useCallback(async (id) => {
     await api.delete(`/sources/${id}`);
     setSources((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  /**
-   * Sends a question: appends the user message, streams the backend answer
-   * live via SSE (POST /ask), then finalizes it with its citations when the
-   * stream completes. On failure the placeholder is marked failed.
-   */
   const sendMessage = useCallback(
     async (text) => {
       if (!notebookId) return;
@@ -211,41 +243,35 @@ export function WorkspaceProvider({ children }) {
 
       const controller = new AbortController();
       abortRef.current = controller;
-      let receivedDone = false;
 
       try {
-        for await (const event of streamAsk(
-          { question: text, notebookId },
-          controller.signal,
-        )) {
-          if (event.type === "delta") {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId
-                  ? { ...m, content: m.content + (event.content ?? "") }
-                  : m,
-              ),
-            );
-          } else if (event.type === "done") {
-            receivedDone = true;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId ? { ...m, ...toMessage(event.message) } : m,
-              ),
-            );
-            break;
-          } else if (event.type === "error") {
-            throw new Error(event.detail || "Could not get an answer.")
-          }
-        }
 
-        // Stream ended without a done/error event (dropped connection) —
-        // don't leave the placeholder stuck in "streaming".
-        if (!receivedDone) {
-          throw new Error("The connection was interrupted. Please try again.")
+        const { data } = await api.post(
+          "/ask",
+          { question: text, notebook_id: notebookId },
+          { signal: controller.signal },
+        );
+
+        const answer = await pollForAnswer({
+          notebookId,
+          afterId: data.id,
+          signal: controller.signal,
+        });
+
+        if (answer.status === "failed") {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? { ...m, ...toMessage(answer), id: assistantId }
+                : m,
+            ),
+          );
+          toast.error(answer.content || "Could not get an answer.");
+        } else {
+          await revealAnswer(assistantId, answer, setMessages, timerRef);
         }
       } catch (error) {
-        if (error.name === "AbortError") return;
+        if (isCanceled(error)) return;
         const detail = error.message || "Could not get an answer.";
         setMessages((prev) =>
           prev.map((m) =>
@@ -279,7 +305,6 @@ export function WorkspaceProvider({ children }) {
   );
 }
 
-/** Reads the workspace state/actions. Must be used inside <WorkspaceProvider>. */
 export function useWorkspace() {
   const ctx = useContext(WorkspaceContext);
   if (!ctx) {
@@ -287,3 +312,4 @@ export function useWorkspace() {
   }
   return ctx;
 }
+

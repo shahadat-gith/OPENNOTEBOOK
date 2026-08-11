@@ -7,7 +7,6 @@ export const SOURCE_TYPE_META = {
   txt: { icon: MdNotes, label: "TXT" },
 }
 
-/** Icon for a source type, rendered inside a gradient tile. */
 export function SourceTypeIcon({ type, className }) {
   const { icon: Icon } = SOURCE_TYPE_META[type]
   return (
@@ -16,3 +15,4 @@ export function SourceTypeIcon({ type, className }) {
     </span>
   )
 }
+

@@ -66,18 +66,31 @@ anyway (DB requests fail until connectivity returns). If you use Atlas:
 4. Restart the server — a successful start logs
    `MongoDB connected … indexes ready`.
 
-## Source ingestion (SQS consumer)
+## Background jobs (SQS)
 
-Uploads are queued asynchronously. The consumer runs **inside the app** — it is
-started automatically in `main.py`'s lifespan, so there is no separate process
-to run. Just start the API:
+Long-running work is queued on SQS and processed **inside the app** — the
+worker (`sqs/worker.py`) polls one queue (`AWS_SQS_QUEUE_URL`) and routes
+each message to the consumer registered for its event type (via
+`sqs/core.py`'s `register_handler`):
+
+- `source.processing` → `sqs/consumers/source.py` — ingest a PDF: download
+  from S3 → extract text page by page → chunk → embed (OpenRouter) → upsert
+  into Qdrant → mark the source `ready`.
+- `chat.ask` → `sqs/consumers/chat.py` — answer a question: embed the query →
+  retrieve chunks from Qdrant → generate a grounded answer → persist the
+  assistant message.
+
+The worker is started automatically in `main.py`'s lifespan, so there is no
+separate process to run. Just start the API:
 
 ```bash
 uv run uvicorn main:app --app-dir src --reload
 ```
 
-The pipeline: download PDF from S3 → extract text page by page → chunk →
-embed (OpenRouter) → upsert into Qdrant → mark the source `ready`.
+The chat flow is asynchronous: `POST /api/v1/ask` persists the user message,
+queues a `chat.ask` job, and returns `202`; the frontend polls the history
+endpoint until the reply appears and reveals it progressively to simulate
+streaming.
 
 ### Required AWS IAM permissions
 
@@ -104,3 +117,5 @@ are missing, the consumer retries every 5s and prints the AccessDenied error.
 | GET    | `/api/v1/sources`     | Bearer | List a notebook's sources (`?notebook_id=`) |
 | POST   | `/api/v1/sources`     | Bearer | Upload a PDF (`multipart file` + `notebook_id`) |
 | DELETE | `/api/v1/sources/:id` | Bearer | Delete a source (S3 + Qdrant + metadata) |
+| POST   | `/api/v1/ask`        | Bearer | Queue a question — answered async via SQS (202) |
+| GET    | `/api/v1/ask`        | Bearer | Notebook conversation history (`?notebook_id=`) |

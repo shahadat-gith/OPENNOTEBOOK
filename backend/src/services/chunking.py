@@ -1,11 +1,7 @@
-
-
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 
 CHUNK_SIZE = 2500
 CHUNK_OVERLAP = 300
-
 
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,
@@ -22,13 +18,11 @@ splitter = RecursiveCharacterTextSplitter(
     ],
 )
 
-
 def chunk_text(
     text: str,
     *,
     page: int,
 ) -> list[dict]:
-    """Split page text into chunks while preserving page metadata."""
 
     text = text.strip()
 

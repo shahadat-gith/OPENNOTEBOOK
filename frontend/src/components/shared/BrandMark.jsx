@@ -1,7 +1,6 @@
 import { MdAutoStories } from "react-icons/md"
 import { cn } from "@/utils/cn"
 
-/** The app logo — a circular blue/purple gradient tile with an open book. */
 export function BrandMark({ className }) {
   return (
     <div
@@ -14,3 +13,4 @@ export function BrandMark({ className }) {
     </div>
   )
 }
+

@@ -8,10 +8,6 @@
     Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/*
- * Dark-only palette inspired by NotebookLM / Gemini Notebook.
- * Outer window #121417, panels #1a1d20, inputs #1e2227/#22262b.
- */
 :root {
   --radius: 0.75rem;
 
@@ -37,7 +33,6 @@
   --input: rgba(255, 255, 255, 0.12);
   --ring: #3b82f6;
 
-  /* Chat user bubble */
   --bubble: #2f3d55;
   --bubble-foreground: #e3e3e3;
 
@@ -51,7 +46,6 @@
   --sidebar-ring: #3b82f6;
 }
 
-/* Dark-only: the palette lives in :root, so there is no light theme to switch to. */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -101,7 +95,6 @@
   @apply bg-primary/20 text-foreground;
 }
 
-/* Slim, subtle scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -116,7 +109,6 @@
   @apply bg-muted-foreground/35;
 }
 
-/* Waving hand for the chat welcome state */
 @keyframes wave {
   0%,
   100% {
@@ -143,3 +135,4 @@
   animation: wave 1.8s ease-in-out infinite;
   transform-origin: 70% 70%;
 }
+

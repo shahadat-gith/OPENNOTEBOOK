@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
         if (mounted) setUser(data);
       })
       .catch(() => {
-        // Expired or invalid token — drop the stored session.
+
         clearToken();
         if (mounted) setUser(null);
       })
@@ -34,8 +34,6 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Any 401 from the backend (e.g. an expired token mid-session) signs the
-  // user out everywhere at once.
   useEffect(() => {
     const onUnauthorized = () => setUser(null);
     window.addEventListener("opennotebook:unauthorized", onUnauthorized);
@@ -53,7 +51,7 @@ export function AuthProvider({ children }) {
 
   async function signup(name, email, password) {
     await api.post("/auth/signup", { name, email, password });
-    // Auto sign-in right after creating the account.
+
     return login(email, password);
   }
 
@@ -73,7 +71,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-/** Reads the auth state/actions. Must be used inside <AuthProvider>. */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
@@ -81,3 +78,4 @@ export function useAuth() {
   }
   return ctx;
 }
+

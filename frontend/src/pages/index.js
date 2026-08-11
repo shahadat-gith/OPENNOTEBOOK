@@ -1,9 +1,3 @@
-/**
- * Barrel for pages.
- *
- *   import { Pages } from "@/pages"
- *   <Pages.HomePage /> <Pages.NotebookPage /> <Pages.LoginPage /> ...
- */
 import { HomePage } from "./HomePage"
 import { NotebookPage } from "./NotebookPage"
 import { LoginPage } from "./LoginPage"
@@ -17,3 +11,4 @@ export const Pages = {
   SignupPage,
   DashboardPage,
 }
+

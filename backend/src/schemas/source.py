@@ -1,10 +1,7 @@
-"""Source request/response schemas."""
-
 from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 SourceType = Literal["pdf", "docx", "txt"]
 SourceStatus = Literal[
@@ -13,7 +10,6 @@ SourceStatus = Literal[
     "ready",
     "failed",
 ]
-
 
 class SourceOut(BaseModel):
     id: str
@@ -32,3 +28,4 @@ class SourceOut(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+

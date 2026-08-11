@@ -1,9 +1,6 @@
-"""Notebook request/response schemas."""
-
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
-
 
 class NotebookCreate(BaseModel):
     title: str = Field(min_length=1, max_length=160)
@@ -17,7 +14,6 @@ class NotebookCreate(BaseModel):
             raise ValueError("Title cannot be blank")
         return title
 
-
 class NotebookOut(BaseModel):
     id: str
     title: str
@@ -27,3 +23,4 @@ class NotebookOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+

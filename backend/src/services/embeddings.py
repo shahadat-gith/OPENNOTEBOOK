@@ -1,22 +1,16 @@
-
-
 import os
 
 from dotenv import load_dotenv
 
-from configs import llm
-
+from configs.llm import llm
 
 load_dotenv()
 
-
 MODEL = os.environ["OPENROUTER_EMBEDDING_MODEL"]
-
 
 async def embed_texts(
     texts: list[str],
 ) -> list[list[float]]:
-    """Generate embeddings for multiple texts."""
 
     if not texts:
         return []
@@ -31,11 +25,9 @@ async def embed_texts(
         for item in response.data
     ]
 
-
 async def embed_query(
     text: str,
 ) -> list[float]:
-    """Generate an embedding for a single query."""
 
     embeddings = await embed_texts([text])
 
