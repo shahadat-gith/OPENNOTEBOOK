@@ -16,12 +16,3 @@ sqs = boto3.client(
 )
 
 QUEUE_URL = os.getenv("AWS_SQS_QUEUE_URL")
-
-
-def send_to_sqs(message):
-    response = sqs.send_message(
-        QueueUrl=QUEUE_URL,
-        MessageBody=json.dumps(message),
-    )
-
-    return response["MessageId"]
