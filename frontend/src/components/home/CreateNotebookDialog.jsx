@@ -27,7 +27,7 @@ export function CreateNotebookDialog({ open, onOpenChange }) {
       const { data } = await api.post("/notebooks", { title: clean })
       const notebook = toNotebook(data)
       onOpenChange(false)
-      navigate(`/notebook?id=${notebook.id}&title=${encodeURIComponent(notebook.title)}`)
+      navigate(`/notebook?id=${notebook.id}`)
     } catch (error) {
       toast.error(error.message || "Could not create the notebook. Please try again.")
       setBusy(false)

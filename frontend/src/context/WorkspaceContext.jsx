@@ -122,11 +122,10 @@ function revealAnswer(assistantId, answer, setMessages, timerRef) {
 }
 
 export function WorkspaceProvider({ children }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const notebookId = searchParams.get("id")?.trim() || "";
-  const [notebookTitle, setNotebookTitle] = useState(
-    searchParams.get("title")?.trim() || "My notebook",
-  );
+  const [notebookTitle, setNotebookTitle] = useState("");
+  const [uploads, setUploads] = useState([]);
 
   const [sources, setSources] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -144,6 +143,22 @@ export function WorkspaceProvider({ children }) {
   );
 
   const [loadErrorShown, setLoadErrorShown] = useState(false);
+
+  useEffect(() => {
+    if (!notebookId) return;
+    let mounted = true;
+    api
+      .get(`/notebooks/${notebookId}`)
+      .then(({ data }) => {
+        if (mounted) setNotebookTitle(data.title);
+      })
+      .catch(() => {
+        if (mounted) setNotebookTitle("Untitled notebook");
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [notebookId]);
 
   const refreshSources = useCallback(async () => {
     if (!notebookId) {
@@ -209,22 +224,42 @@ export function WorkspaceProvider({ children }) {
       if (!notebookId) throw new Error("No notebook selected.");
       const uploaded = [];
       const failed = [];
-      for (const file of files) {
+      const items = files.map((file, i) => ({
+        key: `${file.name}-${i}-${Date.now()}`,
+        name: file.name,
+        progress: 0,
+      }));
+      setUploads((prev) => [...prev, ...items]);
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i];
+        const item = items[i];
         try {
           const form = new FormData();
           form.append("file", file);
           const { data } = await api.post("/sources", form, {
             params: { notebook_id: notebookId },
+            onUploadProgress: (e) => {
+              if (!e.total) return;
+              const pct = Math.min(100, Math.round((e.loaded / e.total) * 100));
+              setUploads((prev) =>
+                prev.map((u) =>
+                  u.key === item.key ? { ...u, progress: pct } : u,
+                ),
+              );
+            },
           });
-          uploaded.push(toSource(data));
+          const source = toSource(data);
+          uploaded.push(source);
+          setSources((prev) => [source, ...prev]);
+          setUploads((prev) => prev.filter((u) => u.key !== item.key));
         } catch (error) {
           failed.push({
             name: file.name,
             message: error.message || "Upload failed",
           });
+          setUploads((prev) => prev.filter((u) => u.key !== item.key));
         }
       }
-      if (uploaded.length > 0) setSources((prev) => [...uploaded, ...prev]);
       return { uploaded, failed };
     },
     [notebookId],
@@ -241,16 +276,8 @@ export function WorkspaceProvider({ children }) {
       if (!clean || !notebookId) return;
       await api.patch(`/notebooks/${notebookId}`, { title: clean });
       setNotebookTitle(clean);
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set("title", clean);
-          return next;
-        },
-        { replace: true },
-      );
     },
-    [notebookId, setSearchParams],
+    [notebookId],
   );
 
   const sendMessage = useCallback(
@@ -327,6 +354,7 @@ export function WorkspaceProvider({ children }) {
         notebookTitle,
         sources,
         messages,
+        uploads,
         sourcesLoading: !sourcesReady,
         messagesLoading: !messagesReady,
         uploadSources,

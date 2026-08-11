@@ -12,7 +12,7 @@ function isPdf(name) {
 }
 
 export function SourcePanel({ collapsed, onToggleCollapse }) {
-  const { sources, uploadSources, sourcesLoading } = useWorkspace()
+  const { sources, uploadSources, sourcesLoading, uploads } = useWorkspace()
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -101,6 +101,38 @@ export function SourcePanel({ collapsed, onToggleCollapse }) {
           handleFiles(e.dataTransfer.files)
         }}
       >
+        {uploads.length > 0 && (
+          <div className="shrink-0 space-y-1 px-2 pt-3">
+            {uploads.map((u) => (
+              <div
+                key={u.key}
+                className="flex items-center gap-3 rounded-xl px-2 py-2"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#262a30] shadow-sm ring-1 ring-white/10">
+                  <MdDescription className="size-5 text-[#8ab4f8]" />
+                </span>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {u.name}
+                  </p>
+                  <div className="h-1 overflow-hidden rounded-full bg-[#262a30]">
+                    <div
+                      className={cn(
+                        "h-full rounded-full bg-[#8ab4f8] transition-[width] duration-200",
+                        u.progress === 0 && "w-1/3 animate-pulse",
+                      )}
+                      style={u.progress > 0 ? { width: `${u.progress}%` } : undefined}
+                    />
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {u.progress}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {sourcesLoading ? (
           <div className="min-h-0 flex-1 space-y-0.5 px-2 pt-3 pb-2">
             {[0, 1, 2].map((i) => (

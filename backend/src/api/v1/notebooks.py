@@ -5,6 +5,7 @@ from services.notebook import (
     count_sources,
     create_notebook,
     delete_notebook,
+    get_notebook,
     list_notebooks,
     update_notebook,
 )
@@ -51,6 +52,34 @@ async def create(
         title=notebook.title,
         description=notebook.description,
         source_count=0,
+        created_at=notebook.created_at,
+        updated_at=notebook.updated_at,
+    )
+
+@router.get("/{notebook_id}", response_model=NotebookOut)
+async def get_one(
+    notebook_id: str,
+    current_user: CurrentUser,
+    db: Db,
+) -> NotebookOut:
+
+    notebook = await get_notebook(
+        db,
+        notebook_id,
+        current_user.id,
+    )
+
+    if not notebook:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notebook not found",
+        )
+
+    return NotebookOut(
+        id=notebook.id,
+        title=notebook.title,
+        description=notebook.description,
+        source_count=await count_sources(db, notebook.id),
         created_at=notebook.created_at,
         updated_at=notebook.updated_at,
     )

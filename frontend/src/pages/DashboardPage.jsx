@@ -82,7 +82,7 @@ export function DashboardPage() {
 
   function openNotebook(notebook) {
 
-    navigate(`/notebook?id=${notebook.id}&title=${encodeURIComponent(notebook.title)}`)
+    navigate(`/notebook?id=${notebook.id}`)
   }
 
   async function confirmDelete() {
