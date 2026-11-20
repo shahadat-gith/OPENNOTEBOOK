@@ -8,10 +8,12 @@ import {
   MdChevronRight,
   MdDescription,
   MdFormatQuote,
+  MdLogout,
   MdMenuBook,
   MdQuestionAnswer,
   MdUploadFile,
 } from "react-icons/md"
+import { toast } from "sonner"
 import { Home } from "@/components/home"
 import { Shared } from "@/components/shared"
 import { UI } from "@/components/ui"
@@ -75,12 +77,17 @@ function HeroBadge() {
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [createOpen, setCreateOpen] = useState(false)
 
   function handleCreate() {
     if (user) setCreateOpen(true)
     else navigate("/login")
+  }
+
+  async function handleLogout() {
+    await logout()
+    toast.success("Signed out — see you soon!")
   }
 
   return (
@@ -109,6 +116,15 @@ export function HomePage() {
               </span>
               <UI.Button asChild variant="ghost" className="h-9 rounded-full px-4 text-sm text-[#e3e3e3] hover:bg-white/5">
                 <Link to="/dashboard">Dashboard</Link>
+              </UI.Button>
+              <UI.Button
+                variant="ghost"
+                onClick={handleLogout}
+                aria-label="Sign out"
+                className="h-9 gap-2 rounded-full border border-white/10 bg-[#1e2227] px-3 text-sm text-[#e3e3e3] hover:bg-[#262a30] hover:text-white"
+              >
+                <MdLogout className="size-4" />
+                <span className="hidden sm:inline">Sign out</span>
               </UI.Button>
             </>
           ) : (

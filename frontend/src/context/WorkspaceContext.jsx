@@ -87,7 +87,9 @@ async function pollForAnswer({ notebookId, afterId, signal }) {
 
 function revealAnswer(assistantId, answer, setMessages, timerRef) {
   return new Promise((resolve) => {
-    const words = (answer.content ?? "").split(" ");
+    const words = (answer.content ?? "").trim()
+      ? (answer.content ?? "").trim().split(/\s+/)
+      : [""];
 
     const duration = Math.min(2600, Math.max(600, words.length * 14));
     const delay = duration / words.length;

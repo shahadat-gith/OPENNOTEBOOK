@@ -1,5 +1,7 @@
 import asyncio
 
+from openai import AuthenticationError
+
 from configs.db import get_db
 from models.common import utcnow
 from models.source import Source
@@ -88,6 +90,18 @@ async def handle_source_processing(body: dict) -> None:
 
     except PermanentMessageError:
         raise
+
+    except AuthenticationError as error:
+        detail = (
+            "OpenRouter rejected the API key. Verify OPENROUTER_API_KEY and "
+            "confirm the key can access OPENROUTER_EMBEDDING_MODEL, then "
+            "upload the PDF again."
+        )
+        await db[Source.Collection].update_one(
+            {"_id": source_id},
+            {"$set": {"status": "failed", "error": detail, "updated_at": utcnow()}},
+        )
+        raise PermanentMessageError(detail) from error
 
     except Exception as error:
         await db[Source.Collection].update_one(

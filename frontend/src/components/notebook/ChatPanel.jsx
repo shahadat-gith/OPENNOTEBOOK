@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { MdArrowUpward, MdAutoAwesome, MdDescription } from "react-icons/md"
+import { MdArrowUpward, MdAutoAwesome } from "react-icons/md"
 import { UI } from "@/components/ui"
 import { useWorkspace } from "@/context/WorkspaceContext"
 import { cn } from "@/utils/cn"

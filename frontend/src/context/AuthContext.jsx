@@ -58,6 +58,8 @@ export function AuthProvider({ children }) {
   async function logout() {
     try {
       await api.post("/auth/logout");
+    } catch {
+      // Logout is local as well: clear credentials even if the API is unavailable.
     } finally {
       clearToken();
       setUser(null);

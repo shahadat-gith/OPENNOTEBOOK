@@ -133,6 +133,13 @@ async def list_sources(
     db: Db,
     notebook_id: str = Query(...),
 ) -> list[SourceOut]:
+    notebook = await get_notebook(db, notebook_id, current_user.id)
+    if not notebook:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notebook not found",
+        )
+
     cursor = (
         db[Source.Collection]
         .find(

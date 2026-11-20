@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { MdEdit, MdSettings, MdShare } from "react-icons/md"
+import { MdEdit, MdLogout, MdSettings, MdShare } from "react-icons/md"
 import { Shared } from "@/components/shared"
 import { UI } from "@/components/ui"
+import { useAuth } from "@/context/AuthContext"
 import { useWorkspace } from "@/context/WorkspaceContext"
 import { cn } from "@/utils/cn"
 import { ChatPanel } from "./ChatPanel"
@@ -90,7 +91,15 @@ function EditableTitle() {
 }
 
 export function Notebook() {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false)
+
+  async function handleLogout() {
+    await logout()
+    toast.success("Signed out — see you soon!")
+    navigate("/")
+  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[#121417] text-[#e3e3e3]">
@@ -124,6 +133,15 @@ export function Notebook() {
               <span className="hidden sm:inline">{label}</span>
             </UI.Button>
           ))}
+          <UI.Button
+            variant="ghost"
+            onClick={handleLogout}
+            aria-label="Sign out"
+            className="h-9 gap-2 rounded-full border border-white/10 bg-[#1e2227] px-3 text-sm text-[#e3e3e3] hover:bg-[#262a30] hover:text-white"
+          >
+            <MdLogout className="size-4" />
+            <span className="hidden sm:inline">Sign out</span>
+          </UI.Button>
         </div>
       </header>
 

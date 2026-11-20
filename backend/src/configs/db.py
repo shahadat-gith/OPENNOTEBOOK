@@ -1,6 +1,11 @@
 import os
 from typing import Annotated
 
+import dns.resolver
+
+dns.resolver.default_resolver = dns.resolver.Resolver()
+dns.resolver.default_resolver.nameservers = ["8.8.8.8"]
+
 from dotenv import load_dotenv
 from fastapi import Depends
 from motor.motor_asyncio import (
